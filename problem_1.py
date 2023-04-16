@@ -11,14 +11,24 @@ def get_KRT(x_world, x_image):
         A.append(vect_2)
 
     A = np.array(A).reshape(x_world.shape[0]*2, 12)
-    U, S, V = np.linalg.svd(A)
+    _, _, V = np.linalg.svd(A)
     P = V[-1].reshape((3,4))
-    H,h = P[:,:3], P[:,-1].reshape(3,1)
-    R_T, K_inv = np.linalg.qr(np.linalg.inv(H))
-    R = np.dot(R_T,H)
-    K = np.linalg.inv(K_inv)
-    t = np.dot(np.linalg.inv(K), h)
-    return R, K , t
+    K, R = np.linalg.qr(np.linalg.inv(P[:, :3]))
+    t = np.dot(np.linalg.inv(K), P[:, 3])
+    return R, K , t, P
+
+def reprojection_error(x_world, x_image, R, K, t,P):
+    num_points = x_world.shape[0]
+    reprojection_errors = []
+    for i in range(num_points):
+        X = x_world[i]
+        x = np.append(x_image[i], 1)
+        proj_X = np.dot(R, X) + t
+        proj_x = np.dot(K, proj_X[:3]) / proj_X[2]
+        error = np.linalg.norm(x - proj_x) / np.linalg.norm(x[:2])
+        reprojection_errors.append(error)
+    return reprojection_errors
+
 def main():
     x_world = np.array([[0,0,0],
                    [0,3,0],
@@ -37,7 +47,9 @@ def main():
                     [329,1041],
                     [1204,850],
                     [340,159]])
-    R, K, t = get_KRT(x_world, x_image)
+    R, K, t, P = get_KRT(x_world, x_image)
+    errors = reprojection_error(x_world, x_image, R, K, t, P)
+    print(errors)
     
 if __name__ == '__main__':
     main()
