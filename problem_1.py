@@ -1,6 +1,8 @@
 import numpy as np
 
+#Function to extract K, R and t matrices
 def get_KRT(x_world, x_image):
+    #building the measurement Matrix A
     A = []
     for i in range(x_world.shape[0]):
         xw,yw,zw = x_world[i]
@@ -9,23 +11,32 @@ def get_KRT(x_world, x_image):
         vect_2 = [0, 0, 0, 0, xw, yw, zw, 1, -y*xw, -y*yw, -y*zw, -y]
         A.append(vect_1)
         A.append(vect_2)
-
+        
     A = np.array(A).reshape(x_world.shape[0]*2, 12)
     _, _, V = np.linalg.svd(A)
+    #Extracting projection matrix using singular value decompostion
     P = V[-1].reshape((3,4))
-    K, R = np.linalg.qr(np.linalg.inv(P[:, :3]))
+    #Perform QR factorization for extracting Rotation and Intrinsic matrices
+    R, K = np.linalg.qr(np.linalg.inv(P[:, :3]))
+    K = np.linalg.inv(K)
+    R = np.linalg.inv(R)
     t = np.dot(np.linalg.inv(K), P[:, 3])
-    return R, K , t, P
+    K = K/K[2,2]
 
-def reprojection_error(x_world, x_image, R, K, t,P):
+    return R, K , t.reshape(3,1), P
+
+def reprojection_error(x_world, x_image, R, K, t):
     num_points = x_world.shape[0]
     reprojection_errors = []
     for i in range(num_points):
-        X = x_world[i]
-        x = np.append(x_image[i], 1)
-        proj_X = np.dot(R, X) + t
-        proj_x = np.dot(K, proj_X[:3]) / proj_X[2]
-        error = np.linalg.norm(x - proj_x) / np.linalg.norm(x[:2])
+        x = np.append(x_world[i], 1)
+        Rt = np.hstack((R,t))
+        #Multiplying the 3D world point to get the coordinates in Camera Coordinate system
+        proj_X = np.dot(Rt, x)
+        #Multiplying Matrix with intrinsic matrix to map the points in image space
+        proj_x = np.dot(K, proj_X) / proj_X[2]
+        #Calculating the error between projected point and image point
+        error = np.linalg.norm(proj_x[:2]-x_image[i])
         reprojection_errors.append(error)
     return reprojection_errors
 
@@ -48,8 +59,17 @@ def main():
                     [1204,850],
                     [340,159]])
     R, K, t, P = get_KRT(x_world, x_image)
-    errors = reprojection_error(x_world, x_image, R, K, t, P)
-    print(errors)
+    print("Projection Matrix P: ")
+    print(P)
+    print("Intrinsic Matrix K: ")
+    print(K)
+    print("Rotation Matrix R: ")
+    print(R)
+    print("Translation Vector t: ")
+    print(t)
+    errors = reprojection_error(x_world, x_image, R, K, t)
+    print('The errors of each point are given in the following list: ', errors)
+    print('Mean of the reprojection error is: ',sum(errors)/len(errors))
     
 if __name__ == '__main__':
     main()
