@@ -7,8 +7,6 @@ import glob
 #dimensions of the checkerboard
 #number of corners per row and column
 board_dim = (6, 9)
-
-
 # Choosing a criteria to stop the iteration after 30
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
@@ -51,14 +49,14 @@ for filename in images:
 		# Draw the corners
 		image = cv2.drawChessboardCorners(image,board_dim,corners2, ret)
 	# display the corners
-	cv2.imshow('img', cv2.resize(image,None, fx = 0.4, fy = 0.4))
+	cv2.imshow('img', cv2.resize(image,None, fx = 0.3, fy = 0.3))
 	cv2.waitKey(0)
 
 cv2.destroyAllWindows()
 #calibrate the camera to extact intrinsic matrix
 _, matrix, distortion, r_vecs, t_vecs = cv2.calibrateCamera(points3d, points2d, grayColor.shape[::-1], None, None)
 
-print(" Intrinsix Matrix K: ")
+print("Intrinsix Matrix K: ")
 print(matrix)
 
 #calculating reprojection error
@@ -68,4 +66,3 @@ for i in range(len(points3d)):
     error = cv2.norm(points2d[i], imgpoints2, cv2.NORM_L2)/len(imgpoints2)
     errors.append(error)
 print("The error for each image is given in the following list: ", errors)
-print("The mean projection error is: ",np.average(errors))

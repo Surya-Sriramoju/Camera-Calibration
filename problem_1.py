@@ -17,6 +17,7 @@ def get_KRT(x_world, x_image):
     #Extracting projection matrix using singular value decompostion
     P = V[-1].reshape((3,4))
     #Perform QR factorization for extracting Rotation and Intrinsic matrices
+    #gram-schmidt process
     R, K = np.linalg.qr(np.linalg.inv(P[:, :3]))
     K = np.linalg.inv(K)
     R = np.linalg.inv(R)
