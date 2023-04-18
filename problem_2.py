@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import os
 import glob
 
 
@@ -24,7 +23,6 @@ objectp3d[0, :, :2] = np.mgrid[0:board_dim[0],0:board_dim[1]].T.reshape(-1, 2) *
 # print(objectp3d)
 
 images = glob.glob('Calibration_Imgs/*.jpg')
-
 for filename in images:
 	image = cv2.imread(filename)
 	grayColor = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -66,3 +64,4 @@ for i in range(len(points3d)):
     error = cv2.norm(points2d[i], imgpoints2, cv2.NORM_L2)/len(imgpoints2)
     errors.append(error)
 print("The error for each image is given in the following list: ", errors)
+print("The mean reprojection error is: ", np.average(errors))
