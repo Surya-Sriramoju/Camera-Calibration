@@ -3,6 +3,8 @@
 ## Problem 1
 ### Libraries used
 - numpy
+
+
 Calculates the intrinsic and extrinsic parameters of the camera and computes the reprojection error
 * Enter into the directory
 * In the terminal execute python problem_1.py
